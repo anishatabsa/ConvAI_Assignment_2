@@ -1,0 +1,40 @@
+id,instruction,context,response,category,language,instruction_len_words,response_len_words
+63,Debug this SQL problem: (SQL),DELETE FROM users WHERE last_login < '2020-01-01',"Without a `WHERE` clause bug this looks fine, but always test destructive statements first with a `SELECT` using the same predicate (`SELECT * FROM users WHERE last_login < '2020-01-01'`) to confirm the row count before running DELETE, and wrap it in a transaction (`BEGIN; ... ; COMMIT;`) so you can `ROLLBACK` if the count looks wrong.",Database/SQL Debugging,SQL,5,56
+26,Can you break down this error message for me? (C++),"Segmentation fault (core dumped)
+Program received signal SIGSEGV, Address not mapped to object","A segmentation fault means the program tried to read or write memory it does not own, commonly from dereferencing a null or dangling pointer, indexing an array out of bounds, or using memory after it was freed. Run the binary under `gdb` or `valgrind --tool=memcheck` to get the exact line and the type of invalid access.",Error Explanation,C++,10,56
+12,Diagnose this multi-threading issue: (Java),Two threads occasionally throw ConcurrentModificationException when iterating over an ArrayList that another thread modifies.,"`ArrayList` is not thread-safe; modifying it while another thread iterates triggers `ConcurrentModificationException` via its fail-fast iterator. Use a thread-safe collection such as `CopyOnWriteArrayList` for read-heavy/write-light workloads, or wrap access with `Collections.synchronizedList()` and synchronize manually during iteration, or use `java.util.concurrent` collections like `ConcurrentLinkedQueue` depending on the access pattern.",Concurrency Debugging,Java,5,47
+94,How should error handling be improved here? (Python),What's wrong with using a bare `except:` clause?,"A bare `except:` catches everything, including `KeyboardInterrupt` and `SystemExit`, and hides the real exception type and traceback, making debugging much harder and potentially masking serious bugs. Catch specific exception classes instead (`except ValueError:`, `except (IOError, OSError):`), and if you truly need a catch-all, use `except Exception as e:` and log `e` with `logging.exception()`.",Exception Handling Guidance,Python,8,53
+61,Explain what this error means and how to fix it: (JavaScript),"TypeError: Cannot read properties of undefined (reading 'map')
+ at renderList (app.js:34)","You are calling `.map()` on a variable that is `undefined` at the time `renderList` runs, most likely because the array is still being fetched asynchronously. Add a guard such as `if (!items) return null;` before the `.map()` call, or default the prop to an empty array, e.g. `items = []`.",Error Explanation,JavaScript,11,50
+65,This is failing in my environment - what's the fix? (Python),ModuleNotFoundError: No module named 'requests',"The `requests` package is not installed in the Python environment currently running your script. Install it with `pip install requests`, and if you use virtual environments, make sure the venv is activated before installing/running (`source venv/bin/activate`). If it's installed but still not found, check `which python` and `pip show requests` to confirm they point to the same environment.",Dependency/Environment Issue,Python,11,58
+6,Diagnose the logic error in the following: (SQL),SELECT * FROM orders WHERE status = 'shipped' OR status = 'delivered' AND customer_id = 42;,"Operator precedence: `AND` binds tighter than `OR`, so this is evaluated as `status = 'shipped' OR (status = 'delivered' AND customer_id = 42)`, which returns ALL shipped orders regardless of customer. Add parentheses to express the intended logic: `WHERE (status = 'shipped' OR status = 'delivered') AND customer_id = 42;`",Logic Error Diagnosis,SQL,8,50
+96,"I'm getting the following error, what's causing it? (C++)","Segmentation fault (core dumped)
+Program received signal SIGSEGV, Address not mapped to object","A segmentation fault means the program tried to read or write memory it does not own, commonly from dereferencing a null or dangling pointer, indexing an array out of bounds, or using memory after it was freed. Run the binary under `gdb` or `valgrind --tool=memcheck` to get the exact line and the type of invalid access.",Error Explanation,C++,9,56
+107,This code is too slow. How can I optimize it? (SQL),SELECT * FROM orders WHERE YEAR(created_at) = 2024;,"Wrapping an indexed column in a function like `YEAR(created_at)` prevents the database from using an index on `created_at`, forcing a full table scan. Rewrite as a range condition that can use the index: `WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';`",Performance Debugging,SQL,11,41
+74,Explain this race condition / concurrency bug:,My application deadlocks intermittently under load. How do I debug it?,"Deadlocks usually come from two or more threads acquiring the same locks in different orders. Take a thread dump when the app hangs (`jstack ` for JVM, `py-spy dump` for Python) and look for threads BLOCKED waiting on a lock held by another BLOCKED thread - that circular wait is the deadlock. Fix it by always acquiring locks in a consistent global order, using timeouts on lock acquisition (`tryLock` with a timeout), or reducing the scope/number of locks needed.",Concurrency Debugging,General,7,79
+82,Find and fix the bug in this code: (Python),"def average(nums):
+ total = 0
+ for n in nums:
+ total += n
+ return total / len(nums)
+
+print(average([]))","This raises `ZeroDivisionError` when `nums` is empty because `len(nums)` is 0. Fix it by guarding against an empty list:
+```python
+def average(nums):
+ if not nums:
+ return 0
+ return sum(nums) / len(nums)
+```",Bug Fix / Code Correction,Python,9,32
+60,Review this code snippet and correct the bug: (Java),"for (int i = 0; i < list.size(); i++) {
+ if (list.get(i).equals(target)) {
+ list.remove(i);
+ }
+}","Removing elements from a `List` while iterating by index causes elements to shift, so the loop can skip the element right after a removal. Iterate backwards, or use `Iterator.remove()`:
+```java
+Iterator it = list.iterator();
+while (it.hasNext()) {
+ if (it.next().equals(target)) {
+ it.remove();
+ }
+}
+```",Bug Fix / Code Correction,Java,9,44

@@ -1,0 +1,30 @@
+{
+  "num_samples": 121,
+  "num_categories": 10,
+  "avg_instruction_len_words": 9.611570247933884,
+  "median_instruction_len_words": 9.0,
+  "avg_response_len_words": 50.59504132231405,
+  "median_response_len_words": 50.0,
+  "min_response_len_words": 30,
+  "max_response_len_words": 86,
+  "category_distribution": {
+    "Error Explanation": 18,
+    "Bug Fix / Code Correction": 18,
+    "Logic Error Diagnosis": 15,
+    "Dependency/Environment Issue": 12,
+    "Performance Debugging": 12,
+    "Exception Handling Guidance": 12,
+    "Database/SQL Debugging": 12,
+    "Test Failure Diagnosis": 9,
+    "Concurrency Debugging": 9,
+    "Debugging Methodology": 4
+  },
+  "language_distribution": {
+    "Python": 52,
+    "JavaScript": 21,
+    "SQL": 18,
+    "Java": 15,
+    "General": 9,
+    "C++": 6
+  }
+}
