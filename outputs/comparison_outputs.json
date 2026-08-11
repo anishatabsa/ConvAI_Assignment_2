@@ -1,0 +1,58 @@
+[
+  {
+    "id": "B1",
+    "category": "Error Explanation",
+    "prompt": "Explain what this error means and how to fix it:\nTraceback (most recent call last):\n  File \"app.py\", line 12, in <module>\n    result = data['user']['age']\nKeyError: 'user'",
+    "baseline_output": "is a key value.\nIn the first line of the file, the following line is missing:\n. \"user\" is a value. \"name\" is the key value for the user.\nThere is a function in the file that will return the user name. The value of the user will be the number of times the user has already been logged in.\nHere, the user is the user's name.\nWhat does the function do?\nThis function returns a number of time-sensitive values.\nThis is the function that will call a function that returns a value that will",
+    "adapted_output": "Error:\n`user'`\n###\nError - 'user`\n``user` `\n### Traceback (http://localhost:8000/user`):\n` `user`` ` `\n`\n``\n## Error - 'admin`\n\n` user` `` ` ``user` `` ` ` ` `` ` ``\n` ``` `` `` ``\n\n`` `` `` `` ``\n`` ` ``\n ` ` ' ` ` | ` |` ` | | ` `' | `` | `| ` | `` | | |"
+  },
+  {
+    "id": "B2",
+    "category": "Bug Fix / Code Correction",
+    "prompt": "Find and fix the bug in this code:\ndef average(nums):\n    total = 0\n    for n in nums:\n        total += n\n    return total / len(nums)\n\nprint(average([]))",
+    "baseline_output": "The above code is written in the following code:",
+    "adapted_output": "* Nums is a tuple of integers, and one is a list of integers with an equal or equal value. This can be useful if you want to make sure that each of the integers in the list is equal to each other.\ndef max(num):\n\n  n = n\n\n\n# If we have a constant or equal, the last number is the last value.\nprint n\n# We have a value for each integer in the range n.\nreturn total\n\n # We have an array of integers and two with equal or greater values.\nn"
+  },
+  {
+    "id": "B3",
+    "category": "Logic Error Diagnosis",
+    "prompt": "This code runs without crashing but gives the wrong result. Why?\ndef apply_discount(price, percent):\n    return price - percent\n\nprint(apply_discount(100, 10))  # expected 90",
+    "baseline_output": "% $0.00\ndef add_discard(price) :\n$0.01\ndef set_discarded(price):\n$1.00 # expected 100 % $1.01 # expected 0 % $2.00 $3.00",
+    "adapted_output": "$ $result = $result - % % %\n\n\n$result = % % $result\n\n}\n} #\n#\n$i = $results - %\nprint(\"$result $result\")\n} else:\nif (result == 0) return $result + %\n$results - $result += $result $results\n} return $results + % % *\n\n# } #\n$return result - % * #\n\ndef add_discard(price_, percent)\n\n #\nreturn $result == % * $result *"
+  },
+  {
+    "id": "B4",
+    "category": "Exception Handling Guidance",
+    "prompt": "What's wrong with using a bare `except:` clause in Python, and what should I do instead?",
+    "baseline_output": "The problem is that the type of arguments you're using will not be used.\nThere's no such thing as a `except` clause. You can simply use a `or` clause if you want to use `or' to get the function.\nBut if you're not using `or', what is the difference between `or`, `or?'?\nThe difference between 'or' and `or'?\nYou can also use `Or' to specify `or,' so that you can pass the arguments to a variable.\nThe same can be done with `or",
+    "adapted_output": "This is not a very simple problem, but it's a very important problem.\n###"
+  },
+  {
+    "id": "B5",
+    "category": "Performance Debugging",
+    "prompt": "This code is too slow. How can I optimize it?\ndef contains_duplicate(nums):\n    for i in range(len(nums)):\n        for j in range(len(nums)):\n            if i != j and nums[i] == nums[j]:\n                return True\n    return False",
+    "baseline_output": "[i-1] = 0\n[j-1]:\n[s-1]] = 1\n[k-1][k-2] = 1",
+    "adapted_output": "In this code, I do not need to have an error message. If I try to optimize the code with the number of times I get it, I get a message that it was not found and I get an error saying something like:\n`````:\ndef len(num):\n`` ```=\n`````:`:```= ```: ``: ```` = 1\n```.`:`.`=``':`= 1\n````` :`:`,`::`` ``.` ="
+  },
+  {
+    "id": "B6",
+    "category": "Debugging Methodology",
+    "prompt": "What's a systematic approach to debugging a hard-to-reproduce production bug?",
+    "baseline_output": "That's the question, and we're trying to figure out what it's like to be debugging a new codebase, and what the heck is it like to have a really fun and productive time?\n\n\nIt's hard to say how many people are actually working on the new code base.\nYou can't even really talk about the fact that the new language has a lot of work, but it's definitely going to be interesting to see how the team decides whether or not to implement the new features in the new version of the codebase.\nSo what's your favorite part of this",
+    "adapted_output": "A systematic approach that uses the following techniques to debug a hard to-reprove bugs is not supported by the production code, but by the test suite:\n# define a hard_to-produce example # define a test suite for each test suite, then test each test\n### To debug a test, define a soft_to_produce instance\n### When we define a target, we must define a \"hard_to\" example.\n### The test suite tests:\n[ test_s: \"hard-to: test_to: hard_tolerant\""
+  },
+  {
+    "id": "B7",
+    "category": "Test Failure Diagnosis",
+    "prompt": "My pytest assertion fails with 'assert 3.0000000000000004 == 3.0'. What's going on and how do I fix the test?",
+    "baseline_output": "I tried it a bit but found it difficult to test the test and couldn't get the test results.\nThis can be hard to fix with testing a test that doesn't support the fact that you're using the test for a particular purpose.\nBut now I'm looking into a solution that I can try to fix:\nI can test a test with the test with Python.\nPython is a simple and straightforward language that does not require any external dependencies.\nHowever, if you have any questions or feedback, please don't hesitate to contact me.\nThanks.",
+    "adapted_output": "This is a non-standard error, and should be fixed, but you should be aware of this error and fix it if you are using the wrong pytest test.\n###\n# Make pytest fail with 'def 3.000000000'\n### Create the test using the pytest_error_method() method ( 'pytest_err' ).\n### Test with 'import 'pytests' # If pytest fails with test 'assert 1.0000000000'\n# The pytest has failed with 'print' .\n### Run the test with the pytests_"
+  },
+  {
+    "id": "B8",
+    "category": "Dependency/Environment Issue",
+    "prompt": "I get 'ModuleNotFoundError: No module named requests' when running my Python script. How do I fix this?",
+    "baseline_output": "I\u2019m not sure how to fix this.\nYou can use the following to fix it.\n$ python -m \"moduleNotFoundException: No modules named requests\"\n$ pip install python-my-python\n$ cd python-python-my.py\n$ mkdir -p python-py $ python -p \"modulenotFoundError\": No modules called module notFoundError : No module called requests\n$ wget -i \"module notFoundException\": No module Called requests\nYou\u2019ll need to add an argument to the python-",
+    "adapted_output": "Error:\n\nModuleNot found:\nModule Not found:"
+  }
+]

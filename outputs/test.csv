@@ -1,0 +1,68 @@
+id,instruction,context,response,category,language,instruction_len_words,response_len_words
+75,How do I use pdb to debug a Python script?,,"Insert `import pdb; pdb.set_trace()` (or `breakpoint()` on Python 3.7+) at the line where you want execution to pause. Once paused you can inspect variables by typing their names, step line-by-line with `n` (next) or `s` (step into), continue with `c`, and print an expression with `p `. For post-mortem debugging after a crash, run the script with `python -m pdb -c continue script.py` or wrap the call in `pdb.pm()` in a REPL right after the exception.",Debugging Methodology,Python,10,76
+8,This code is too slow. How can I optimize it? (Python),"def contains_duplicate(nums):
+ for i in range(len(nums)):
+ for j in range(len(nums)):
+ if i != j and nums[i] == nums[j]:
+ return True
+ return False","This is O(n^2) because of the nested loop comparing every pair. Use a set for O(n) time: 
+```python
+def contains_duplicate(nums):
+ seen = set()
+ for n in nums:
+ if n in seen:
+ return True
+ seen.add(n)
+ return False
+```",Performance Debugging,Python,11,37
+18,This is failing in my environment - what's the fix? (Python),pip install fails with: Could not find a version that satisfies the requirement tensorflow==2.9.0,"This typically means the requested version isn't available for your Python version/platform (e.g. tensorflow 2.9 doesn't ship wheels for very new Python versions), or you're behind a proxy/offline index. Check `python --version` against the package's supported versions, try `pip install tensorflow` without pinning to see what resolves, and confirm `pip config list` doesn't point to a broken/private index.",Dependency/Environment Issue,Python,11,58
+90,Find and fix the bug in this code: (C++),"int* create_array(int size) {
+ int arr[size];
+ return arr;
+}","`arr` is allocated on the stack and is destroyed when the function returns, so the returned pointer becomes a dangling pointer. Allocate on the heap instead (and remember to free/delete it, or prefer `std::vector`):
+```cpp
+std::vector create_array(int size) {
+ return std::vector(size);
+}
+```",Bug Fix / Code Correction,C++,9,43
+15,What's the best way to handle this situation? (Python),How should I handle a file that might not exist when reading a config file?,"Wrap the read in a targeted `try/except FileNotFoundError` rather than a bare `except:` so you don't silently swallow unrelated bugs:
+```python
+try:
+ with open('config.yaml') as f:
+ config = yaml.safe_load(f)
+except FileNotFoundError:
+ config = DEFAULT_CONFIG
+ logging.warning('config.yaml not found, using defaults')
+```
+Log the fallback so the missing file is visible in production, and avoid catching `Exception` broadly since it can hide programming errors like typos in the YAML parser call.",Exception Handling Guidance,Python,9,69
+48,Review this code snippet and correct the bug: (JavaScript),"function sumArray(arr) {
+ let total;
+ for (let i = 0; i <= arr.length; i++) {
+ total += arr[i];
+ }
+ return total;
+}","Two bugs here: (1) `total` is never initialized, so it starts as `undefined` and every addition produces `NaN`; (2) the loop condition `i <= arr.length` reads one index past the end of the array. Fix:
+```javascript
+function sumArray(arr) {
+ let total = 0;
+ for (let i = 0; i < arr.length; i++) {
+ total += arr[i];
+ }
+ return total;
+}
+```",Bug Fix / Code Correction,JavaScript,9,61
+105,Something is off with this logic - can you spot it? (Python),"def apply_discount(price, percent):
+ return price - percent
+
+print(apply_discount(100, 10)) # expected 90","The function subtracts the raw percent value instead of computing a percentage of the price, so `apply_discount(100, 10)` returns 90 by coincidence but `apply_discount(200, 10)` would wrongly return 190 instead of 180. Fix: `return price - (price * percent / 100)`.",Logic Error Diagnosis,Python,12,41
+78,Explain what this error means and how to fix it: (SQL),ERROR 1054 (42S22): Unknown column 'usr.email' in 'field list',"MySQL cannot find a column named `email` on the table aliased `usr`. Either the column name is misspelled, the alias doesn't match the table in the FROM/JOIN clause, or the column was renamed/dropped in a migration. Run `DESCRIBE ` to confirm the actual column names and fix the alias or column reference.",Error Explanation,SQL,11,52
+30,Diagnose the logic error in the following: (Python),"def apply_discount(price, percent):
+ return price - percent
+
+print(apply_discount(100, 10)) # expected 90","The function subtracts the raw percent value instead of computing a percentage of the price, so `apply_discount(100, 10)` returns 90 by coincidence but `apply_discount(200, 10)` would wrongly return 190 instead of 180. Fix: `return price - (price * percent / 100)`.",Logic Error Diagnosis,Python,8,41
+9,Diagnose why this test fails: (Python),AssertionError: assert 3.0000000000000004 == 3.0,"This is a floating-point precision issue - `0.1 + 0.1 + 0.1` etc. do not always sum to an exact decimal in binary floating point. Don't compare floats with `==`; use `math.isclose(a, b, rel_tol=1e-9)` or pytest's `pytest.approx()`: `assert result == pytest.approx(3.0)`.",Test Failure Diagnosis,Python,6,41
+111,How should error handling be improved here? (Java),"catch (Exception e) {
+ // ignore
+}","Swallowing exceptions silently is dangerous - failures disappear with no trace, making bugs almost impossible to diagnose later. At minimum log the exception with context (`logger.error(""failed to process order {}"", orderId, e)`), and catch the most specific exception type you can handle meaningfully rather than the generic `Exception`.",Exception Handling Guidance,Java,8,48
+102,Help me understand this test failure: (Python),Test passes in isolation (`pytest test_foo.py::test_a`) but fails when run with the full suite.,"This usually indicates shared/global state leaking between tests - a module-level variable, a database row not cleaned up, a monkeypatch not reverted, or test order dependence. Check for missing `fixture` teardown, use `pytest --randomly-seed` (pytest-randomly) to confirm order-dependence, and make sure each test sets up and tears down its own isolated state rather than relying on side effects from earlier tests.",Test Failure Diagnosis,Python,7,61
+115,Review this database query for issues: (SQL),DELETE FROM users WHERE last_login < '2020-01-01',"Without a `WHERE` clause bug this looks fine, but always test destructive statements first with a `SELECT` using the same predicate (`SELECT * FROM users WHERE last_login < '2020-01-01'`) to confirm the row count before running DELETE, and wrap it in a transaction (`BEGIN; ... ; COMMIT;`) so you can `ROLLBACK` if the count looks wrong.",Database/SQL Debugging,SQL,7,56

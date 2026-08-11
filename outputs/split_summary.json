@@ -1,0 +1,8 @@
+{
+  "train": 96,
+  "validation": 12,
+  "test": 13,
+  "train_pct": 79.3,
+  "val_pct": 9.9,
+  "test_pct": 10.7
+}

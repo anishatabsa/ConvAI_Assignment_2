@@ -1,0 +1,421 @@
+id,instruction,context,response,category,language,instruction_len_words,response_len_words
+80,How should error handling be improved here? (JavaScript),fetch('/api/user').then(res => res.json()).then(data => setUser(data));,"There is no `.catch()`, so a network failure or non-2xx response will produce an unhandled promise rejection and the UI will hang with no feedback. Add error handling and a status check:
+```javascript
+fetch('/api/user')
+ .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+ .then(data => setUser(data))
+ .catch(err => { console.error(err); setError('Could not load user'); });
+```",Exception Handling Guidance,JavaScript,8,59
+14,Explain this race condition / concurrency bug: (Python),"counter = 0
+def increment():
+ global counter
+ for _ in range(100000):
+ counter += 1
+# run increment() in 2 threads -> counter ends up less than 200000","`counter += 1` is not atomic - it's a read, add, and write, so two threads can interleave and lose updates (a classic race condition). Protect the critical section with a lock:
+```python
+import threading
+lock = threading.Lock()
+def increment():
+ global counter
+ for _ in range(100000):
+ with lock:
+ counter += 1
+```
+Or use `threading.local()`/an atomic counter structure, or avoid shared mutable state entirely with multiprocessing + message passing.",Concurrency Debugging,Python,8,69
+117,This code is too slow. How can I optimize it? (JavaScript),"items.forEach(item => {
+ document.getElementById('list').innerHTML += `${item}`;
+});","Appending to `innerHTML` inside a loop forces the browser to re-parse and re-render the entire list on every iteration, which is O(n^2) for n items. Build the HTML string (or a DocumentFragment) once, then assign it after the loop:
+```javascript
+const html = items.map(item => `${item}`).join('');
+document.getElementById('list').innerHTML = html;
+```",Performance Debugging,JavaScript,11,50
+38,Diagnose this multi-threading issue:,My application deadlocks intermittently under load. How do I debug it?,"Deadlocks usually come from two or more threads acquiring the same locks in different orders. Take a thread dump when the app hangs (`jstack ` for JVM, `py-spy dump` for Python) and look for threads BLOCKED waiting on a lock held by another BLOCKED thread - that circular wait is the deadlock. Fix it by always acquiring locks in a consistent global order, using timeouts on lock acquisition (`tryLock` with a timeout), or reducing the scope/number of locks needed.",Concurrency Debugging,General,4,79
+67,Diagnose the logic error in the following: (Python),"def find_max(nums):
+ max_val = 0
+ for n in nums:
+ if n > max_val:
+ max_val = n
+ return max_val
+
+print(find_max([-5, -2, -9])) # returns 0, expected -2",Initializing `max_val = 0` silently breaks for lists of all-negative numbers because 0 is never exceeded. Initialize with the first element instead: `max_val = nums[0]` (and handle the empty-list case separately).,Logic Error Diagnosis,Python,8,31
+40,Diagnose the logic error in the following: (Java),"if (age >= 13 && age = 12 && age <= 17) {
+ category = ""minor"";
+}","The two age ranges overlap (13-17 falls in both branches), and because `age >= 13 && age <= 19` is checked first, anyone 12-17 who should also match ""minor"" is always classified as ""teen"" instead - the second branch becomes partially unreachable. Redefine the ranges so they are mutually exclusive, e.g. minor = 0-12, teen = 13-19.",Logic Error Diagnosis,Java,8,57
+108,Something is off with this logic - can you spot it? (Python),"def find_max(nums):
+ max_val = 0
+ for n in nums:
+ if n > max_val:
+ max_val = n
+ return max_val
+
+print(find_max([-5, -2, -9])) # returns 0, expected -2",Initializing `max_val = 0` silently breaks for lists of all-negative numbers because 0 is never exceeded. Initialize with the first element instead: `max_val = nums[0]` (and handle the empty-list case separately).,Logic Error Diagnosis,Python,12,31
+46,Give me guidance on proper exception handling for this case: (Python),What's wrong with using a bare `except:` clause?,"A bare `except:` catches everything, including `KeyboardInterrupt` and `SystemExit`, and hides the real exception type and traceback, making debugging much harder and potentially masking serious bugs. Catch specific exception classes instead (`except ValueError:`, `except (IOError, OSError):`), and if you truly need a catch-all, use `except Exception as e:` and log `e` with `logging.exception()`.",Exception Handling Guidance,Python,11,53
+77,Review this database query for issues: (Python),"conn = sqlite3.connect('app.db')
+for user_id in user_ids:
+ cur = conn.execute(f""SELECT * FROM users WHERE id = {user_id}"")","Building SQL with an f-string is a SQL-injection vulnerability and also causes query-plan-cache misses since each query string is unique. Use parameterized queries: `conn.execute(""SELECT * FROM users WHERE id = ?"", (user_id,))`. This is safer and lets the database reuse the prepared statement plan.",Database/SQL Debugging,Python,7,44
+36,Can you break down this error message for me? (Python),ImportError: cannot import name 'urlencode' from 'urllib',"In Python 3, `urlencode` moved to `urllib.parse`, not `urllib` directly. Change the import to `from urllib.parse import urlencode`. This error typically shows up when Python 2 code is run unmodified under Python 3.",Error Explanation,Python,10,33
+2,How do I resolve this setup problem?,Docker container works on my machine but crashes with 'exec format error' on the deployment server.,"This means the image was built for a different CPU architecture than the server (commonly building on Apple Silicon/ARM and deploying to an x86_64 server, or vice versa). Rebuild with the correct target platform, e.g. `docker buildx build --platform linux/amd64 -t myimage .`, or use multi-platform builds so the image works on both architectures.",Dependency/Environment Issue,General,7,54
+47,Identify the performance bottleneck in this code: (Python),"def contains_duplicate(nums):
+ for i in range(len(nums)):
+ for j in range(len(nums)):
+ if i != j and nums[i] == nums[j]:
+ return True
+ return False","This is O(n^2) because of the nested loop comparing every pair. Use a set for O(n) time: 
+```python
+def contains_duplicate(nums):
+ seen = set()
+ for n in nums:
+ if n in seen:
+ return True
+ seen.add(n)
+ return False
+```",Performance Debugging,Python,8,37
+113,"Why is this running slowly, and how do I speed it up? (Python)","result = []
+for row in large_dataframe.iterrows():
+ result.append(row[1]['value'] * 2)",`DataFrame.iterrows()` is notoriously slow on large data because it creates a Series object per row. Use vectorized operations instead: `result = (large_dataframe['value'] * 2).tolist()`. This can be 50-100x faster on large datasets since it uses NumPy's compiled routines instead of a Python-level loop.,Performance Debugging,Python,13,43
+11,Review this database query for issues: (SQL),Query runs fine on staging but times out on production with the same data volume.,"Check `EXPLAIN ANALYZE` on production - the query planner may be choosing a different execution plan due to stale statistics (`ANALYZE `), a missing index that exists on staging, table bloat, or different `work_mem`/buffer settings. Compare index lists between environments (`\d ` in psql) and confirm migrations that add indexes actually ran on production.",Database/SQL Debugging,SQL,7,54
+103,Give me guidance on proper exception handling for this case: (java),"catch (Exception e) {
+ // ignore
+}","Swallowing exceptions silently is dangerous - failures disappear with no trace, making bugs almost impossible to diagnose later. At minimum log the exception with context (`logger.error(""failed to process order {}"", orderId, e)`), and catch the most specific exception type you can handle meaningfully rather than the generic `Exception`.",Exception Handling Guidance,Java,11,48
+42,"Why is this running slowly, and how do I speed it up? (Python)","def contains_duplicate(nums):
+ for i in range(len(nums)):
+ for j in range(len(nums)):
+ if i != j and nums[i] == nums[j]:
+ return True
+ return False","This is O(n^2) because of the nested loop comparing every pair. Use a set for O(n) time: 
+```python
+def contains_duplicate(nums):
+ seen = set()
+ for n in nums:
+ if n in seen:
+ return True
+ seen.add(n)
+ return False
+```",Performance Debugging,Python,13,37
+35,Can you break down this error message for me? (JavaScript),"TypeError: Cannot read properties of undefined (reading 'map')
+ at renderList (app.js:34)","You are calling `.map()` on a variable that is `undefined` at the time `renderList` runs, most likely because the array is still being fetched asynchronously. Add a guard such as `if (!items) return null;` before the `.map()` call, or default the prop to an empty array, e.g. `items = []`.",Error Explanation,JavaScript,10,50
+20,What's the best way to handle this situation? (Java),"catch (Exception e) {
+ // ignore
+}","Swallowing exceptions silently is dangerous - failures disappear with no trace, making bugs almost impossible to diagnose later. At minimum log the exception with context (`logger.error(""failed to process order {}"", orderId, e)`), and catch the most specific exception type you can handle meaningfully rather than the generic `Exception`.",Exception Handling Guidance,Java,9,48
+87,Help me understand this test failure: (Python),AssertionError: assert 3.0000000000000004 == 3.0,"This is a floating-point precision issue - `0.1 + 0.1 + 0.1` etc. do not always sum to an exact decimal in binary floating point. Don't compare floats with `==`; use `math.isclose(a, b, rel_tol=1e-9)` or pytest's `pytest.approx()`: `assert result == pytest.approx(3.0)`.",Test Failure Diagnosis,Python,7,41
+24,I'm seeing this concurrency bug. What's happening and how do I fix it?,My application deadlocks intermittently under load. How do I debug it?,"Deadlocks usually come from two or more threads acquiring the same locks in different orders. Take a thread dump when the app hangs (`jstack ` for JVM, `py-spy dump` for Python) and look for threads BLOCKED waiting on a lock held by another BLOCKED thread - that circular wait is the deadlock. Fix it by always acquiring locks in a consistent global order, using timeouts on lock acquisition (`tryLock` with a timeout), or reducing the scope/number of locks needed.",Concurrency Debugging,General,13,79
+119,I'm seeing this concurrency bug. What's happening and how do I fix it? (Java),Two threads occasionally throw ConcurrentModificationException when iterating over an ArrayList that another thread modifies.,"`ArrayList` is not thread-safe; modifying it while another thread iterates triggers `ConcurrentModificationException` via its fail-fast iterator. Use a thread-safe collection such as `CopyOnWriteArrayList` for read-heavy/write-light workloads, or wrap access with `Collections.synchronizedList()` and synchronize manually during iteration, or use `java.util.concurrent` collections like `ConcurrentLinkedQueue` depending on the access pattern.",Concurrency Debugging,Java,14,47
+19,This code is too slow. How can I optimize it? (Python),"result = []
+for row in large_dataframe.iterrows():
+ result.append(row[1]['value'] * 2)",`DataFrame.iterrows()` is notoriously slow on large data because it creates a Series object per row. Use vectorized operations instead: `result = (large_dataframe['value'] * 2).tolist()`. This can be 50-100x faster on large datasets since it uses NumPy's compiled routines instead of a Python-level loop.,Performance Debugging,Python,11,43
+4,Diagnose why this test fails: (Python),Test passes in isolation (`pytest test_foo.py::test_a`) but fails when run with the full suite.,"This usually indicates shared/global state leaking between tests - a module-level variable, a database row not cleaned up, a monkeypatch not reverted, or test order dependence. Check for missing `fixture` teardown, use `pytest --randomly-seed` (pytest-randomly) to confirm order-dependence, and make sure each test sets up and tears down its own isolated state rather than relying on side effects from earlier tests.",Test Failure Diagnosis,Python,6,61
+84,Explain what this error means and how to fix it: (python),"Traceback (most recent call last):
+ File ""app.py"", line 12, in 
+ result = data['user']['age']
+KeyError: 'user'","This KeyError means the dictionary `data` does not have a key named 'user'. Before indexing, check with `if 'user' in data:` or use `data.get('user', {}).get('age')` to avoid the crash. Print `data.keys()` to confirm what keys actually exist at that point in the program.",Error Explanation,Python,11,43
+69,Give me guidance on proper exception handling for this case: (JavaScript),fetch('/api/user').then(res => res.json()).then(data => setUser(data));,"There is no `.catch()`, so a network failure or non-2xx response will produce an unhandled promise rejection and the UI will hang with no feedback. Add error handling and a status check:
+```javascript
+fetch('/api/user')
+ .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+ .then(data => setUser(data))
+ .catch(err => { console.error(err); setError('Could not load user'); });
+```",Exception Handling Guidance,JavaScript,11,59
+29,Debug this SQL problem: (Python),"conn = sqlite3.connect('app.db')
+for user_id in user_ids:
+ cur = conn.execute(f""SELECT * FROM users WHERE id = {user_id}"")","Building SQL with an f-string is a SQL-injection vulnerability and also causes query-plan-cache misses since each query string is unique. Use parameterized queries: `conn.execute(""SELECT * FROM users WHERE id = ?"", (user_id,))`. This is safer and lets the database reuse the prepared statement plan.",Database/SQL Debugging,Python,5,44
+16,Help me understand this test failure: (JavaScript),FAIL Timeout - Async callback was not invoked within the 5000ms timeout specified by jest.setTimeout,"The test is waiting on a promise or callback that never resolves, commonly because a mocked API call wasn't set up, `done()` was never called, or a returned promise was not awaited. Check that any mocked network/service calls in the test actually resolve, and that async test functions use `async/await` or return the promise so Jest can track completion.",Test Failure Diagnosis,JavaScript,7,59
+109,This function isn't working correctly. What's wrong and how do I fix it? (Python),"def average(nums):
+ total = 0
+ for n in nums:
+ total += n
+ return total / len(nums)
+
+print(average([]))","This raises `ZeroDivisionError` when `nums` is empty because `len(nums)` is 0. Fix it by guarding against an empty list:
+```python
+def average(nums):
+ if not nums:
+ return 0
+ return sum(nums) / len(nums)
+```",Bug Fix / Code Correction,Python,14,32
+10,Diagnose this multi-threading issue: (Python),"counter = 0
+def increment():
+ global counter
+ for _ in range(100000):
+ counter += 1
+# run increment() in 2 threads -> counter ends up less than 200000","`counter += 1` is not atomic - it's a read, add, and write, so two threads can interleave and lose updates (a classic race condition). Protect the critical section with a lock:
+```python
+import threading
+lock = threading.Lock()
+def increment():
+ global counter
+ for _ in range(100000):
+ with lock:
+ counter += 1
+```
+Or use `threading.local()`/an atomic counter structure, or avoid shared mutable state entirely with multiprocessing + message passing.",Concurrency Debugging,Python,5,69
+116,How do I resolve this setup problem? (Python),ModuleNotFoundError: No module named 'requests',"The `requests` package is not installed in the Python environment currently running your script. Install it with `pip install requests`, and if you use virtual environments, make sure the venv is activated before installing/running (`source venv/bin/activate`). If it's installed but still not found, check `which python` and `pip show requests` to confirm they point to the same environment.",Dependency/Environment Issue,Python,8,58
+68,This code runs without crashing but gives the wrong result. Why? (Java),"if (age >= 13 && age = 12 && age <= 17) {
+ category = ""minor"";
+}","The two age ranges overlap (13-17 falls in both branches), and because `age >= 13 && age <= 19` is checked first, anyone 12-17 who should also match ""minor"" is always classified as ""teen"" instead - the second branch becomes partially unreachable. Redefine the ranges so they are mutually exclusive, e.g. minor = 0-12, teen = 13-19.",Logic Error Diagnosis,Java,12,57
+73,Can you break down this error message for me? (SQL),ERROR 1054 (42S22): Unknown column 'usr.email' in 'field list',"MySQL cannot find a column named `email` on the table aliased `usr`. Either the column name is misspelled, the alias doesn't match the table in the FROM/JOIN clause, or the column was renamed/dropped in a migration. Run `DESCRIBE ` to confirm the actual column names and fix the alias or column reference.",Error Explanation,SQL,10,52
+79,Something is off with this logic - can you spot it? (SQL),SELECT * FROM orders WHERE status = 'shipped' OR status = 'delivered' AND customer_id = 42;,"Operator precedence: `AND` binds tighter than `OR`, so this is evaluated as `status = 'shipped' OR (status = 'delivered' AND customer_id = 42)`, which returns ALL shipped orders regardless of customer. Add parentheses to express the intended logic: `WHERE (status = 'shipped' OR status = 'delivered') AND customer_id = 42;`",Logic Error Diagnosis,SQL,12,50
+17,"I'm getting the following error, what's causing it? (SQL)",ERROR 1054 (42S22): Unknown column 'usr.email' in 'field list',"MySQL cannot find a column named `email` on the table aliased `usr`. Either the column name is misspelled, the alias doesn't match the table in the FROM/JOIN clause, or the column was renamed/dropped in a migration. Run `DESCRIBE ` to confirm the actual column names and fix the alias or column reference.",Error Explanation,SQL,9,52
+45,This function isn't working correctly. What's wrong and how do I fix it? (Python),"def is_even(n):
+ if n % 2 == 1:
+ return True
+ else:
+ return False","The logic is inverted: `n % 2 == 1` is true for odd numbers, not even ones, so the function returns True for odd inputs. Fix: use `n % 2 == 0`, or more simply `return n % 2 == 0`.",Bug Fix / Code Correction,Python,14,41
+22,This code runs without crashing but gives the wrong result. Why? (Python),"def apply_discount(price, percent):
+ return price - percent
+
+print(apply_discount(100, 10)) # expected 90","The function subtracts the raw percent value instead of computing a percentage of the price, so `apply_discount(100, 10)` returns 90 by coincidence but `apply_discount(200, 10)` would wrongly return 190 instead of 180. Fix: `return price - (price * percent / 100)`.",Logic Error Diagnosis,Python,12,41
+114,This code runs without crashing but gives the wrong result. Why? (Python),"def find_max(nums):
+ max_val = 0
+ for n in nums:
+ if n > max_val:
+ max_val = n
+ return max_val
+
+print(find_max([-5, -2, -9])) # returns 0, expected -2",Initializing `max_val = 0` silently breaks for lists of all-negative numbers because 0 is never exceeded. Initialize with the first element instead: `max_val = nums[0]` (and handle the empty-list case separately).,Logic Error Diagnosis,Python,12,31
+120,Identify the performance bottleneck in this code: (Python),"result = []
+for row in large_dataframe.iterrows():
+ result.append(row[1]['value'] * 2)",`DataFrame.iterrows()` is notoriously slow on large data because it creates a Series object per row. Use vectorized operations instead: `result = (large_dataframe['value'] * 2).tolist()`. This can be 50-100x faster on large datasets since it uses NumPy's compiled routines instead of a Python-level loop.,Performance Debugging,Python,8,43
+25,This code runs without crashing but gives the wrong result. Why? (SQL),SELECT * FROM orders WHERE status = 'shipped' OR status = 'delivered' AND customer_id = 42;,"Operator precedence: `AND` binds tighter than `OR`, so this is evaluated as `status = 'shipped' OR (status = 'delivered' AND customer_id = 42)`, which returns ALL shipped orders regardless of customer. Add parentheses to express the intended logic: `WHERE (status = 'shipped' OR status = 'delivered') AND customer_id = 42;`",Logic Error Diagnosis,SQL,12,50
+54,Identify the performance bottleneck in this code: (SQL),SELECT * FROM orders WHERE YEAR(created_at) = 2024;,"Wrapping an indexed column in a function like `YEAR(created_at)` prevents the database from using an index on `created_at`, forcing a full table scan. Rewrite as a range condition that can use the index: `WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';`",Performance Debugging,SQL,8,41
+88,Identify the performance bottleneck in this code: (JavaScript),"items.forEach(item => {
+ document.getElementById('list').innerHTML += `${item}`;
+});","Appending to `innerHTML` inside a loop forces the browser to re-parse and re-render the entire list on every iteration, which is O(n^2) for n items. Build the HTML string (or a DocumentFragment) once, then assign it after the loop:
+```javascript
+const html = items.map(item => `${item}`).join('');
+document.getElementById('list').innerHTML = html;
+```",Performance Debugging,JavaScript,8,50
+118,How do I resolve this setup problem? (JavaScript),"npm ERR! peer dep missing: react@"">=16"", required by react-router-dom@6.4.0","`react-router-dom` needs `react` version 16 or higher as a peer dependency but it isn't installed (or an incompatible version is). Run `npm install react@^18 react-dom@^18`, or if using npm 7+, re-run `npm install` since it usually auto-installs compatible peer deps; check `npm ls react` to confirm the resolved version.",Dependency/Environment Issue,JavaScript,8,49
+106,"What's wrong with this SQL, and how should I fix it? (SQL)",Query runs fine on staging but times out on production with the same data volume.,"Check `EXPLAIN ANALYZE` on production - the query planner may be choosing a different execution plan due to stale statistics (`ANALYZE `), a missing index that exists on staging, table bloat, or different `work_mem`/buffer settings. Compare index lists between environments (`\d ` in psql) and confirm migrations that add indexes actually ran on production.",Database/SQL Debugging,SQL,12,54
+85,Can you break down this error message for me? (Python),"Traceback (most recent call last):
+ File ""app.py"", line 12, in 
+ result = data['user']['age']
+KeyError: 'user'","This KeyError means the dictionary `data` does not have a key named 'user'. Before indexing, check with `if 'user' in data:` or use `data.get('user', {}).get('age')` to avoid the crash. Print `data.keys()` to confirm what keys actually exist at that point in the program.",Error Explanation,Python,10,43
+91,Find and fix the bug in this code: (Java),"for (int i = 0; i < list.size(); i++) {
+ if (list.get(i).equals(target)) {
+ list.remove(i);
+ }
+}","Removing elements from a `List` while iterating by index causes elements to shift, so the loop can skip the element right after a removal. Iterate backwards, or use `Iterator.remove()`:
+```java
+Iterator it = list.iterator();
+while (it.hasNext()) {
+ if (it.next().equals(target)) {
+ it.remove();
+ }
+}
+```",Bug Fix / Code Correction,Java,9,44
+23,Debug this SQL problem: (SQL),"SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > 5 WHERE status = 'active';","`WHERE` cannot appear after `HAVING` - `WHERE` filters rows before grouping and must come before `GROUP BY`, while `HAVING` filters after aggregation. Correct order: `SELECT customer_id, COUNT(*) FROM orders WHERE status = 'active' GROUP BY customer_id HAVING COUNT(*) > 5;`",Database/SQL Debugging,SQL,5,40
+27,Explain this race condition / concurrency bug: (Java),Two threads occasionally throw ConcurrentModificationException when iterating over an ArrayList that another thread modifies.,"`ArrayList` is not thread-safe; modifying it while another thread iterates triggers `ConcurrentModificationException` via its fail-fast iterator. Use a thread-safe collection such as `CopyOnWriteArrayList` for read-heavy/write-light workloads, or wrap access with `Collections.synchronizedList()` and synchronize manually during iteration, or use `java.util.concurrent` collections like `ConcurrentLinkedQueue` depending on the access pattern.",Concurrency Debugging,Java,8,47
+56,Can you break down this error message for me? (Java),"Exception in thread ""main"" java.lang.NullPointerException
+ at com.app.Order.getTotal(Order.java:22)","A NullPointerException at that line means an object reference used inside `getTotal()` is null, likely because a field was never initialized or a constructor argument was not set before the method was called. Add a null check, initialize fields with defaults, or trace the call site to see why the object was never assigned.",Error Explanation,Java,10,54
+41,"Why is this running slowly, and how do I speed it up? (JavaScript)","items.forEach(item => {
+ document.getElementById('list').innerHTML += `${item}`;
+});","Appending to `innerHTML` inside a loop forces the browser to re-parse and re-render the entire list on every iteration, which is O(n^2) for n items. Build the HTML string (or a DocumentFragment) once, then assign it after the loop:
+```javascript
+const html = items.map(item => `${item}`).join('');
+document.getElementById('list').innerHTML = html;
+```",Performance Debugging,JavaScript,13,50
+100,"I'm getting the following error, what's causing it? (Python)","Traceback (most recent call last):
+ File ""app.py"", line 12, in 
+ result = data['user']['age']
+KeyError: 'user'","This KeyError means the dictionary `data` does not have a key named 'user'. Before indexing, check with `if 'user' in data:` or use `data.get('user', {}).get('age')` to avoid the crash. Print `data.keys()` to confirm what keys actually exist at that point in the program.",Error Explanation,Python,9,43
+66,"I'm getting the following error, what's causing it? (Python)",ImportError: cannot import name 'urlencode' from 'urllib',"In Python 3, `urlencode` moved to `urllib.parse`, not `urllib` directly. Change the import to `from urllib.parse import urlencode`. This error typically shows up when Python 2 code is run unmodified under Python 3.",Error Explanation,Python,9,33
+51,This function isn't working correctly. What's wrong and how do I fix it? (C++),"int* create_array(int size) {
+ int arr[size];
+ return arr;
+}","`arr` is allocated on the stack and is destroyed when the function returns, so the returned pointer becomes a dangling pointer. Allocate on the heap instead (and remember to free/delete it, or prefer `std::vector`):
+```cpp
+std::vector create_array(int size) {
+ return std::vector(size);
+}
+```",Bug Fix / Code Correction,C++,14,43
+76,Explain what this error means and how to fix it: (C++),"Segmentation fault (core dumped)
+Program received signal SIGSEGV, Address not mapped to object","A segmentation fault means the program tried to read or write memory it does not own, commonly from dereferencing a null or dangling pointer, indexing an array out of bounds, or using memory after it was freed. Run the binary under `gdb` or `valgrind --tool=memcheck` to get the exact line and the type of invalid access.",Error Explanation,C++,11,56
+58,My test is failing with this output. What's going on? (Python),AssertionError: assert 3.0000000000000004 == 3.0,"This is a floating-point precision issue - `0.1 + 0.1 + 0.1` etc. do not always sum to an exact decimal in binary floating point. Don't compare floats with `==`; use `math.isclose(a, b, rel_tol=1e-9)` or pytest's `pytest.approx()`: `assert result == pytest.approx(3.0)`.",Test Failure Diagnosis,Python,11,41
+121,This function isn't working correctly. What's wrong and how do I fix it? (JavaScript),"function sumArray(arr) {
+ let total;
+ for (let i = 0; i <= arr.length; i++) {
+ total += arr[i];
+ }
+ return total;
+}","Two bugs here: (1) `total` is never initialized, so it starts as `undefined` and every addition produces `NaN`; (2) the loop condition `i <= arr.length` reads one index past the end of the array. Fix:
+```javascript
+function sumArray(arr) {
+ let total = 0;
+ for (let i = 0; i < arr.length; i++) {
+ total += arr[i];
+ }
+ return total;
+}
+```",Bug Fix / Code Correction,JavaScript,14,61
+101,Diagnose why this test fails: (JavaScript),FAIL Timeout - Async callback was not invoked within the 5000ms timeout specified by jest.setTimeout,"The test is waiting on a promise or callback that never resolves, commonly because a mocked API call wasn't set up, `done()` was never called, or a returned promise was not awaited. Check that any mocked network/service calls in the test actually resolve, and that async test functions use `async/await` or return the promise so Jest can track completion.",Test Failure Diagnosis,JavaScript,6,59
+13,Debug this SQL problem: (SQL),Query runs fine on staging but times out on production with the same data volume.,"Check `EXPLAIN ANALYZE` on production - the query planner may be choosing a different execution plan due to stale statistics (`ANALYZE `), a missing index that exists on staging, table bloat, or different `work_mem`/buffer settings. Compare index lists between environments (`\d ` in psql) and confirm migrations that add indexes actually ran on production.",Database/SQL Debugging,SQL,5,54
+1,Something is off with this logic - can you spot it? (javascript),"function isPalindrome(str) {
+ return str === str.split('').reverse();
+}","`str.split('').reverse()` returns an array, and comparing a string to an array with `===` is always false. Join the reversed array back into a string before comparing: `return str === str.split('').reverse().join('');`",Logic Error Diagnosis,JavaScript,12,30
+50,How should error handling be improved here? (Python),How should I handle a file that might not exist when reading a config file?,"Wrap the read in a targeted `try/except FileNotFoundError` rather than a bare `except:` so you don't silently swallow unrelated bugs:
+```python
+try:
+ with open('config.yaml') as f:
+ config = yaml.safe_load(f)
+except FileNotFoundError:
+ config = DEFAULT_CONFIG
+ logging.warning('config.yaml not found, using defaults')
+```
+Log the fallback so the missing file is visible in production, and avoid catching `Exception` broadly since it can hide programming errors like typos in the YAML parser call.",Exception Handling Guidance,Python,8,69
+57,My test is failing with this output. What's going on? (JavaScript),FAIL Timeout - Async callback was not invoked within the 5000ms timeout specified by jest.setTimeout,"The test is waiting on a promise or callback that never resolves, commonly because a mocked API call wasn't set up, `done()` was never called, or a returned promise was not awaited. Check that any mocked network/service calls in the test actually resolve, and that async test functions use `async/await` or return the promise so Jest can track completion.",Test Failure Diagnosis,JavaScript,11,59
+64,My code works locally but fails in production. How should I approach this?,,"Check for environment differences systematically: compare dependency versions (`pip freeze` / `npm ls` in both environments), environment variables and config/secrets, OS or runtime version, database schema/data differences, timezone and locale settings, and network/firewall access to external services. Reproduce the production environment as closely as possible (Docker helps), and add structured logging around the failing code path so the next occurrence gives you concrete evidence instead of guesswork.",Debugging Methodology,General,13,67
+81,Find and fix the bug in this code: (Python),"def is_even(n):
+ if n % 2 == 1:
+ return True
+ else:
+ return False","The logic is inverted: `n % 2 == 1` is true for odd numbers, not even ones, so the function returns True for odd inputs. Fix: use `n % 2 == 0`, or more simply `return n % 2 == 0`.",Bug Fix / Code Correction,Python,9,41
+92,I'm running into this environment/dependency issue:,Docker container works on my machine but crashes with 'exec format error' on the deployment server.,"This means the image was built for a different CPU architecture than the server (commonly building on Apple Silicon/ARM and deploying to an x86_64 server, or vice versa). Rebuild with the correct target platform, e.g. `docker buildx build --platform linux/amd64 -t myimage .`, or use multi-platform builds so the image works on both architectures.",Dependency/Environment Issue,General,6,54
+28,"What's wrong with this SQL, and how should I fix it? (SQL)","SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > 5 WHERE status = 'active';","`WHERE` cannot appear after `HAVING` - `WHERE` filters rows before grouping and must come before `GROUP BY`, while `HAVING` filters after aggregation. Correct order: `SELECT customer_id, COUNT(*) FROM orders WHERE status = 'active' GROUP BY customer_id HAVING COUNT(*) > 5;`",Database/SQL Debugging,SQL,12,40
+93,I'm running into this environment/dependency issue: (JavaScript),"npm ERR! peer dep missing: react@"">=16"", required by react-router-dom@6.4.0","`react-router-dom` needs `react` version 16 or higher as a peer dependency but it isn't installed (or an incompatible version is). Run `npm install react@^18 react-dom@^18`, or if using npm 7+, re-run `npm install` since it usually auto-installs compatible peer deps; check `npm ls react` to confirm the resolved version.",Dependency/Environment Issue,JavaScript,7,49
+7,My test is failing with this output. What's going on? (Python),Test passes in isolation (`pytest test_foo.py::test_a`) but fails when run with the full suite.,"This usually indicates shared/global state leaking between tests - a module-level variable, a database row not cleaned up, a monkeypatch not reverted, or test order dependence. Check for missing `fixture` teardown, use `pytest --randomly-seed` (pytest-randomly) to confirm order-dependence, and make sure each test sets up and tears down its own isolated state rather than relying on side effects from earlier tests.",Test Failure Diagnosis,Python,11,61
+98,"Why is this running slowly, and how do I speed it up? (SQL)",SELECT * FROM orders WHERE YEAR(created_at) = 2024;,"Wrapping an indexed column in a function like `YEAR(created_at)` prevents the database from using an index on `created_at`, forcing a full table scan. Rewrite as a range condition that can use the index: `WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';`",Performance Debugging,SQL,13,41
+21,Find and fix the bug in this code: (JavaScript),"function sumArray(arr) {
+ let total;
+ for (let i = 0; i <= arr.length; i++) {
+ total += arr[i];
+ }
+ return total;
+}","Two bugs here: (1) `total` is never initialized, so it starts as `undefined` and every addition produces `NaN`; (2) the loop condition `i <= arr.length` reads one index past the end of the array. Fix:
+```javascript
+function sumArray(arr) {
+ let total = 0;
+ for (let i = 0; i < arr.length; i++) {
+ total += arr[i];
+ }
+ return total;
+}
+```",Bug Fix / Code Correction,JavaScript,9,61
+110,Explain what this error means and how to fix it: (Java),"Exception in thread ""main"" java.lang.NullPointerException
+ at com.app.Order.getTotal(Order.java:22)","A NullPointerException at that line means an object reference used inside `getTotal()` is null, likely because a field was never initialized or a constructor argument was not set before the method was called. Add a null check, initialize fields with defaults, or trace the call site to see why the object was never assigned.",Error Explanation,Java,11,54
+89,What's the best way to handle this situation? (JavaScript),fetch('/api/user').then(res => res.json()).then(data => setUser(data));,"There is no `.catch()`, so a network failure or non-2xx response will produce an unhandled promise rejection and the UI will hang with no feedback. Add error handling and a status check:
+```javascript
+fetch('/api/user')
+ .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+ .then(data => setUser(data))
+ .catch(err => { console.error(err); setError('Could not load user'); });
+```",Exception Handling Guidance,JavaScript,9,59
+70,Explain what this error means and how to fix it: (Python),ImportError: cannot import name 'urlencode' from 'urllib',"In Python 3, `urlencode` moved to `urllib.parse`, not `urllib` directly. Change the import to `from urllib.parse import urlencode`. This error typically shows up when Python 2 code is run unmodified under Python 3.",Error Explanation,Python,11,33
+99,This is failing in my environment - what's the fix? (JavaScript),"npm ERR! peer dep missing: react@"">=16"", required by react-router-dom@6.4.0","`react-router-dom` needs `react` version 16 or higher as a peer dependency but it isn't installed (or an incompatible version is). Run `npm install react@^18 react-dom@^18`, or if using npm 7+, re-run `npm install` since it usually auto-installs compatible peer deps; check `npm ls react` to confirm the resolved version.",Dependency/Environment Issue,JavaScript,11,49
+33,I'm seeing this concurrency bug. What's happening and how do I fix it? (Python),"counter = 0
+def increment():
+ global counter
+ for _ in range(100000):
+ counter += 1
+# run increment() in 2 threads -> counter ends up less than 200000","`counter += 1` is not atomic - it's a read, add, and write, so two threads can interleave and lose updates (a classic race condition). Protect the critical section with a lock:
+```python
+import threading
+lock = threading.Lock()
+def increment():
+ global counter
+ for _ in range(100000):
+ with lock:
+ counter += 1
+```
+Or use `threading.local()`/an atomic counter structure, or avoid shared mutable state entirely with multiprocessing + message passing.",Concurrency Debugging,Python,14,69
+95,Review this code snippet and correct the bug: (C++),"int* create_array(int size) {
+ int arr[size];
+ return arr;
+}","`arr` is allocated on the stack and is destroyed when the function returns, so the returned pointer becomes a dangling pointer. Allocate on the heap instead (and remember to free/delete it, or prefer `std::vector`):
+```cpp
+std::vector create_array(int size) {
+ return std::vector(size);
+}
+```",Bug Fix / Code Correction,C++,9,43
+53,"What's wrong with this SQL, and how should I fix it? (SQL)",DELETE FROM users WHERE last_login < '2020-01-01',"Without a `WHERE` clause bug this looks fine, but always test destructive statements first with a `SELECT` using the same predicate (`SELECT * FROM users WHERE last_login < '2020-01-01'`) to confirm the row count before running DELETE, and wrap it in a transaction (`BEGIN; ... ; COMMIT;`) so you can `ROLLBACK` if the count looks wrong.",Database/SQL Debugging,SQL,12,56
+59,Find and fix the bug in this code: (Python),"def get_config(overrides={}):
+ overrides['env'] = 'prod'
+ return overrides","Using a mutable default argument (`{}`) is a classic Python bug: the same dict object is reused across every call and keeps accumulating changes. Use `None` as the default and create a new dict inside the function:
+```python
+def get_config(overrides=None):
+ overrides = dict(overrides) if overrides else {}
+ overrides['env'] = 'prod'
+ return overrides
+```",Bug Fix / Code Correction,Python,9,53
+72,Review this code snippet and correct the bug: (Python),"def average(nums):
+ total = 0
+ for n in nums:
+ total += n
+ return total / len(nums)
+
+print(average([]))","This raises `ZeroDivisionError` when `nums` is empty because `len(nums)` is 0. Fix it by guarding against an empty list:
+```python
+def average(nums):
+ if not nums:
+ return 0
+ return sum(nums) / len(nums)
+```",Bug Fix / Code Correction,Python,9,32
+3,Review this code snippet and correct the bug: (Python),"def get_config(overrides={}):
+ overrides['env'] = 'prod'
+ return overrides","Using a mutable default argument (`{}`) is a classic Python bug: the same dict object is reused across every call and keeps accumulating changes. Use `None` as the default and create a new dict inside the function:
+```python
+def get_config(overrides=None):
+ overrides = dict(overrides) if overrides else {}
+ overrides['env'] = 'prod'
+ return overrides
+```",Bug Fix / Code Correction,Python,9,53
+97,Review this code snippet and correct the bug: (Python),"def is_even(n):
+ if n % 2 == 1:
+ return True
+ else:
+ return False","The logic is inverted: `n % 2 == 1` is true for odd numbers, not even ones, so the function returns True for odd inputs. Fix: use `n % 2 == 0`, or more simply `return n % 2 == 0`.",Bug Fix / Code Correction,Python,9,41
+62,This code runs without crashing but gives the wrong result. Why? (JavaScript),"function isPalindrome(str) {
+ return str === str.split('').reverse();
+}","`str.split('').reverse()` returns an array, and comparing a string to an array with `===` is always false. Join the reversed array back into a string before comparing: `return str === str.split('').reverse().join('');`",Logic Error Diagnosis,JavaScript,12,30
+52,"I'm getting the following error, what's causing it? (Java)","Exception in thread ""main"" java.lang.NullPointerException
+ at com.app.Order.getTotal(Order.java:22)","A NullPointerException at that line means an object reference used inside `getTotal()` is null, likely because a field was never initialized or a constructor argument was not set before the method was called. Add a null check, initialize fields with defaults, or trace the call site to see why the object was never assigned.",Error Explanation,Java,9,54
+71,Give me guidance on proper exception handling for this case: (Python),How should I handle a file that might not exist when reading a config file?,"Wrap the read in a targeted `try/except FileNotFoundError` rather than a bare `except:` so you don't silently swallow unrelated bugs:
+```python
+try:
+ with open('config.yaml') as f:
+ config = yaml.safe_load(f)
+except FileNotFoundError:
+ config = DEFAULT_CONFIG
+ logging.warning('config.yaml not found, using defaults')
+```
+Log the fallback so the missing file is visible in production, and avoid catching `Exception` broadly since it can hide programming errors like typos in the YAML parser call.",Exception Handling Guidance,Python,11,69
+32,I'm running into this environment/dependency issue: (Python),pip install fails with: Could not find a version that satisfies the requirement tensorflow==2.9.0,"This typically means the requested version isn't available for your Python version/platform (e.g. tensorflow 2.9 doesn't ship wheels for very new Python versions), or you're behind a proxy/offline index. Check `python --version` against the package's supported versions, try `pip install tensorflow` without pinning to see what resolves, and confirm `pip config list` doesn't point to a broken/private index.",Dependency/Environment Issue,Python,7,58
+34,How do I resolve this setup problem? (Python),pip install fails with: Could not find a version that satisfies the requirement tensorflow==2.9.0,"This typically means the requested version isn't available for your Python version/platform (e.g. tensorflow 2.9 doesn't ship wheels for very new Python versions), or you're behind a proxy/offline index. Check `python --version` against the package's supported versions, try `pip install tensorflow` without pinning to see what resolves, and confirm `pip config list` doesn't point to a broken/private index.",Dependency/Environment Issue,Python,8,58
+39,This is failing in my environment - what's the fix?,Docker container works on my machine but crashes with 'exec format error' on the deployment server.,"This means the image was built for a different CPU architecture than the server (commonly building on Apple Silicon/ARM and deploying to an x86_64 server, or vice versa). Rebuild with the correct target platform, e.g. `docker buildx build --platform linux/amd64 -t myimage .`, or use multi-platform builds so the image works on both architectures.",Dependency/Environment Issue,General,10,54
+5,What's the best way to handle this situation? (python),What's wrong with using a bare `except:` clause?,"A bare `except:` catches everything, including `KeyboardInterrupt` and `SystemExit`, and hides the real exception type and traceback, making debugging much harder and potentially masking serious bugs. Catch specific exception classes instead (`except ValueError:`, `except (IOError, OSError):`), and if you truly need a catch-all, use `except Exception as e:` and log `e` with `logging.exception()`.",Exception Handling Guidance,Python,9,53
+37,Review this database query for issues: (SQL),"SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > 5 WHERE status = 'active';","`WHERE` cannot appear after `HAVING` - `WHERE` filters rows before grouping and must come before `GROUP BY`, while `HAVING` filters after aggregation. Correct order: `SELECT customer_id, COUNT(*) FROM orders WHERE status = 'active' GROUP BY customer_id HAVING COUNT(*) > 5;`",Database/SQL Debugging,SQL,7,40
+104,"I'm getting the following error, what's causing it? (JavaScript)","TypeError: Cannot read properties of undefined (reading 'map')
+ at renderList (app.js:34)","You are calling `.map()` on a variable that is `undefined` at the time `renderList` runs, most likely because the array is still being fetched asynchronously. Add a guard such as `if (!items) return null;` before the `.map()` call, or default the prop to an empty array, e.g. `items = []`.",Error Explanation,JavaScript,9,50
+112,What's a systematic approach to debugging a hard-to-reproduce production bug?,,"1) Reproduce reliably first - gather logs, stack traces, and the exact input/environment; 2) form a hypothesis about the cause rather than guessing randomly; 3) add targeted logging or use a debugger to inspect state at the suspected point; 4) use binary search / bisection (git bisect, or disabling half the code path) to narrow down where the bug was introduced; 5) write a minimal reproduction case; 6) fix the root cause, not just the symptom; 7) add a regression test so it cannot silently reappear.",Debugging Methodology,General,10,86
+49,How can git bisect help find which commit introduced a bug?,,"`git bisect start`, then mark a known-bad commit with `git bisect bad` and a known-good commit with `git bisect good `. Git checks out a commit halfway between them; you test it and mark it `good` or `bad`, and git repeats the binary search until it identifies the exact commit that introduced the regression. You can automate this with `git bisect run ` if you have a script that exits non-zero on failure.",Debugging Methodology,General,11,73
+31,This function isn't working correctly. What's wrong and how do I fix it? (Java),"for (int i = 0; i < list.size(); i++) {
+ if (list.get(i).equals(target)) {
+ list.remove(i);
+ }
+}","Removing elements from a `List` while iterating by index causes elements to shift, so the loop can skip the element right after a removal. Iterate backwards, or use `Iterator.remove()`:
+```java
+Iterator it = list.iterator();
+while (it.hasNext()) {
+ if (it.next().equals(target)) {
+ it.remove();
+ }
+}
+```",Bug Fix / Code Correction,Java,14,44
+83,Something is off with this logic - can you spot it? (Java),"if (age >= 13 && age = 12 && age <= 17) {
+ category = ""minor"";
+}","The two age ranges overlap (13-17 falls in both branches), and because `age >= 13 && age <= 19` is checked first, anyone 12-17 who should also match ""minor"" is always classified as ""teen"" instead - the second branch becomes partially unreachable. Redefine the ranges so they are mutually exclusive, e.g. minor = 0-12, teen = 13-19.",Logic Error Diagnosis,Java,12,57
+43,Diagnose the logic error in the following: (JavaScript),"function isPalindrome(str) {
+ return str === str.split('').reverse();
+}","`str.split('').reverse()` returns an array, and comparing a string to an array with `===` is always false. Join the reversed array back into a string before comparing: `return str === str.split('').reverse().join('');`",Logic Error Diagnosis,JavaScript,8,30
+86,This function isn't working correctly. What's wrong and how do I fix it? (Python),"def get_config(overrides={}):
+ overrides['env'] = 'prod'
+ return overrides","Using a mutable default argument (`{}`) is a classic Python bug: the same dict object is reused across every call and keeps accumulating changes. Use `None` as the default and create a new dict inside the function:
+```python
+def get_config(overrides=None):
+ overrides = dict(overrides) if overrides else {}
+ overrides['env'] = 'prod'
+ return overrides
+```",Bug Fix / Code Correction,Python,14,53
+44,"What's wrong with this SQL, and how should I fix it? (Python)","conn = sqlite3.connect('app.db')
+for user_id in user_ids:
+ cur = conn.execute(f""SELECT * FROM users WHERE id = {user_id}"")","Building SQL with an f-string is a SQL-injection vulnerability and also causes query-plan-cache misses since each query string is unique. Use parameterized queries: `conn.execute(""SELECT * FROM users WHERE id = ?"", (user_id,))`. This is safer and lets the database reuse the prepared statement plan.",Database/SQL Debugging,Python,12,44
+55,I'm running into this environment/dependency issue: (Python),ModuleNotFoundError: No module named 'requests',"The `requests` package is not installed in the Python environment currently running your script. Install it with `pip install requests`, and if you use virtual environments, make sure the venv is activated before installing/running (`source venv/bin/activate`). If it's installed but still not found, check `which python` and `pip show requests` to confirm they point to the same environment.",Dependency/Environment Issue,Python,7,58
